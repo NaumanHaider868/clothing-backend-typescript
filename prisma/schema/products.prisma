@@ -1,0 +1,53 @@
+model Product {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  description        String?
+  price              Decimal
+  collection         String?
+  modelDetail        String?
+  isPublic           Boolean  @default(true)
+  gender             Gender
+  collectionType     CollectionType
+  onSale             Boolean  @default(false)
+  discountPercentage Decimal?
+  inStock            Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  variants ProductVariant[]
+  images   ProductImage[]
+}
+
+model ProductVariant {
+  id         Int    @id @default(autoincrement())
+  productId  Int
+  color      String
+  size       String
+  stockCount Int
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductImage {
+  id        Int    @id @default(autoincrement())
+  productId Int
+  imageUrl  String
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+enum Gender {
+  men
+  women
+  kids
+  unisex
+}
+
+enum CollectionType {
+  men
+  women
+  boys
+  girls
+  unisex
+  other
+}
