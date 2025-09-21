@@ -4,3 +4,4 @@ export * from './fields';
 export * from './bcrypt';
 export * from './jwt';
 export * from './common';
+export * from './convert';
