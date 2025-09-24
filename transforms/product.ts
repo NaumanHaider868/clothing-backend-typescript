@@ -13,17 +13,17 @@ const transformProduct = (data: createProduct) => {
     onSale: data.onSale,
     discountPercentage: data.discountPercentage,
     inStock: data.inStock,
-    images: {
-      create: data.images.map((image) => ({
-        imageUrl: image,
+    variants: {
+      deleteMany: {}, // remove old
+      create: data.variants.map((v) => ({
+        color: v.color,
+        size: v.size,
+        stockCount: v.stockCount,
       })),
     },
-    variants: {
-      create: data.variants.map((variant) => ({
-        color: variant.color,
-        size: variant.size,
-        stockCount: variant.stockCount,
-      })),
+    images: {
+      deleteMany: {},
+      create: data.images.map((img) => ({ imageUrl: img })),
     },
   };
 };
