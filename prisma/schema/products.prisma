@@ -1,18 +1,19 @@
 model Product {
-  id                 Int      @id @default(autoincrement())
+  id                 Int            @id @default(autoincrement())
   name               String
   description        String?
   price              Decimal
   collection         String?
   modelDetail        String?
-  isPublic           Boolean  @default(true)
+  isPublic           Boolean        @default(true)
   gender             Gender
   collectionType     CollectionType
-  onSale             Boolean  @default(false)
+  type               String?
+  onSale             Boolean        @default(false)
   discountPercentage Decimal?
-  inStock            Boolean  @default(true)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  inStock            Boolean        @default(true)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 
   variants ProductVariant[]
   images   ProductImage[]

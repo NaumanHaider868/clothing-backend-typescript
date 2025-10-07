@@ -11,7 +11,7 @@ const router = Router();
 router.post('/create', createProduct);
 router.get('/all', fetchProducts);
 router.get('/fetch/:id', fetchProduct);
-router.get('/delete/:id', deleteProduct);
+router.delete('/delete/:id', deleteProduct);
 router.patch('/edit/:id', editProduct);
 
 export default router;

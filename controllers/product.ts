@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { prisma } from '../config';
 import { transformProduct } from '../transforms';
-import type { createProduct as CreateProductBody } from '../types';
+import type { createProduct as CreateProductBody, FetchProducts } from '../types';
 import {
   appErrorResponse,
   RequestWithBody,
@@ -27,10 +27,30 @@ const createProduct = async (req: RequestWithBody<CreateProductBody>, res: Respo
   }
 };
 
-const fetchProducts = async (req: Request, res: Response) => {
+const fetchProducts = async (req: RequestWithBody<FetchProducts>, res: Response) => {
   try {
+    const { search, type, size } = req.body;
     const products = await prisma.product.findMany({
-      include: {
+      where: {
+        name: {
+          contains: search,
+        },
+        type,
+        ...(size && {
+          variants: {
+            some: {
+              size,
+            },
+          },
+        }),
+      },
+      select: {
+        name: true,
+        price: true,
+        id: true,
+        onSale: true,
+        inStock: true,
+        type: true,
         images: true,
         variants: true,
       },
@@ -44,7 +64,7 @@ const fetchProducts = async (req: Request, res: Response) => {
 const editProduct = async (req: RequestWithParams<{ id: string }>, res: Response) => {
   try {
     const { id } = req.params;
-    const data = transformProduct(req.body);
+    const data = transformProduct(req.body, true);
     const product = await prisma.product.update({
       where: { id: toSafeNumber(id) },
       data,
@@ -78,7 +98,7 @@ const deleteProduct = async (req: RequestWithParams<{ id: string }>, res: Respon
     await prisma.product.delete({
       where: { id: toSafeNumber(id) },
     });
-    return sendSuccessResponse(res, 200, null, 'Product deleted successfully');
+    return sendSuccessResponse(res, 200, [], 'Product deleted successfully');
   } catch (error) {
     return appErrorResponse(res, error);
   }

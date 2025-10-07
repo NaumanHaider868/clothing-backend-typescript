@@ -20,8 +20,15 @@ interface createProduct {
   inStock: boolean;
   stock: number;
   category: string;
+  type: string;
   images: string[];
   variants: ProductVariantInput[];
 }
 
-export { createProduct, Gender, CollectionType, ProductVariantInput };
+interface FetchProducts {
+  search?: string;
+  size?: string;
+  type?: string;
+}
+
+export { createProduct, Gender, CollectionType, ProductVariantInput, FetchProducts };

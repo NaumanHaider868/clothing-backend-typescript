@@ -1,6 +1,6 @@
 import { createProduct, Gender, CollectionType } from '../types';
 
-const transformProduct = (data: createProduct) => {
+const transformProduct = (data: createProduct, isUpdate?: boolean) => {
   return {
     name: data.name,
     description: data.description,
@@ -13,8 +13,9 @@ const transformProduct = (data: createProduct) => {
     onSale: data.onSale,
     discountPercentage: data.discountPercentage,
     inStock: data.inStock,
+    type: data.type,
     variants: {
-      deleteMany: {}, // remove old
+      ...(isUpdate ? { deleteMany: {} } : {}),
       create: data.variants.map((v) => ({
         color: v.color,
         size: v.size,
@@ -22,7 +23,7 @@ const transformProduct = (data: createProduct) => {
       })),
     },
     images: {
-      deleteMany: {},
+      ...(isUpdate ? { deleteMany: {} } : {}),
       create: data.images.map((img) => ({ imageUrl: img })),
     },
   };
