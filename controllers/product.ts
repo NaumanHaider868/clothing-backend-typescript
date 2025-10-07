@@ -30,12 +30,15 @@ const createProduct = async (req: RequestWithBody<CreateProductBody>, res: Respo
 const fetchProducts = async (req: RequestWithBody<FetchProducts>, res: Response) => {
   try {
     const { search, type, size } = req.body;
+
     const products = await prisma.product.findMany({
       where: {
-        name: {
-          contains: search,
-        },
-        type,
+        ...(search && {
+          name: {
+            contains: search,
+          },
+        }),
+        ...(type && { type }),
         ...(size && {
           variants: {
             some: {
@@ -45,9 +48,9 @@ const fetchProducts = async (req: RequestWithBody<FetchProducts>, res: Response)
         }),
       },
       select: {
+        id: true,
         name: true,
         price: true,
-        id: true,
         onSale: true,
         inStock: true,
         type: true,
@@ -55,6 +58,7 @@ const fetchProducts = async (req: RequestWithBody<FetchProducts>, res: Response)
         variants: true,
       },
     });
+
     return sendSuccessResponse(res, 200, products, 'Products fetched successfully');
   } catch (error) {
     return appErrorResponse(res, error);
