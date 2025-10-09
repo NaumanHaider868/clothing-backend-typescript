@@ -24,7 +24,7 @@ const transformProduct = (data: createProduct, isUpdate?: boolean) => {
     },
     images: {
       ...(isUpdate ? { deleteMany: {} } : {}),
-      create: data.images.map((img) => ({ imageUrl: img })),
+      create: data.images.map((img) => ({ imageUrl: img.url, color: img.color })),
     },
   };
 };

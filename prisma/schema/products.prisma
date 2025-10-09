@@ -33,6 +33,7 @@ model ProductImage {
   id        Int    @id @default(autoincrement())
   productId Int
   imageUrl  String
+  color     String?
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }

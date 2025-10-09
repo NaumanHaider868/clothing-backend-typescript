@@ -21,7 +21,7 @@ interface createProduct {
   stock: number;
   category: string;
   type: string;
-  images: string[];
+  images: { url: string; color: string }[];
   variants: ProductVariantInput[];
 }
 
