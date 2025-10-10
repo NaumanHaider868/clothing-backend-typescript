@@ -56,6 +56,7 @@ const fetchProducts = async (req: RequestWithBody<FetchProducts>, res: Response)
         type: true,
         images: true,
         variants: true,
+        discountPercentage: true,
       },
     });
 
