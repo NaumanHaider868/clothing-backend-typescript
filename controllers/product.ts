@@ -17,10 +17,15 @@ const createProduct = async (req: RequestWithBody<CreateProductBody>, res: Respo
     const product = await prisma.product.create({
       data,
       include: {
-        images: true,
-        variants: true,
+        variants: {
+          include: {
+            images: true,
+            sizes: true,
+          },
+        },
       },
     });
+
     return sendSuccessResponse(res, 200, product, 'Product created successfully');
   } catch (error) {
     return appErrorResponse(res, error);
@@ -34,29 +39,38 @@ const fetchProducts = async (req: RequestWithBody<FetchProducts>, res: Response)
     const products = await prisma.product.findMany({
       where: {
         ...(search && {
-          name: {
-            contains: search,
-          },
+          name: { contains: search },
         }),
         ...(type && { type }),
+        // ...(color && {
+        //   variants: {
+        //     some: {
+        //       color,
+        //     },
+        //   },
+        // }),
         ...(size && {
           variants: {
             some: {
-              size,
+              sizes: {
+                some: {
+                  size,
+                },
+              },
             },
           },
         }),
       },
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        onSale: true,
-        inStock: true,
-        type: true,
-        images: true,
-        variants: true,
-        discountPercentage: true,
+      include: {
+        variants: {
+          include: {
+            images: true,
+            sizes: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
 
@@ -74,8 +88,12 @@ const editProduct = async (req: RequestWithParams<{ id: string }>, res: Response
       where: { id: toSafeNumber(id) },
       data,
       include: {
-        images: true,
-        variants: true,
+        variants: {
+          include: {
+            images: true,
+            sizes: true,
+          },
+        },
       },
     });
     return sendSuccessResponse(res, 200, product, 'Product updated successfully');
@@ -89,7 +107,14 @@ const fetchProduct = async (req: RequestWithParams<{ id: string }>, res: Respons
     const { id } = req.params;
     const product = await prisma.product.findUnique({
       where: { id: toSafeNumber(id) },
-      include: { images: true, variants: true },
+      include: {
+        variants: {
+          include: {
+            images: true,
+            sizes: true,
+          },
+        },
+      },
     });
     return sendSuccessResponse(res, 200, product, 'Product fetched successfully');
   } catch (error) {

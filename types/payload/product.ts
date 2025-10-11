@@ -1,11 +1,14 @@
 import { CollectionType, Gender } from '../../enums';
 
-interface ProductVariantInput {
-  color: string;
+interface ProductVariantSize {
   size: string;
   stockCount: number;
 }
-
+interface ProductVariantInput {
+  color: string;
+  images: string[];
+  sizes: ProductVariantSize[];
+}
 interface createProduct {
   name: string;
   description: string;
@@ -16,12 +19,11 @@ interface createProduct {
   gender: Gender;
   collectionType: CollectionType;
   onSale: boolean;
-  discountPercentage?: number;
+  discountPercent?: number;
   inStock: boolean;
   stock: number;
   category: string;
   type: string;
-  images: { url: string; color: string }[];
   variants: ProductVariantInput[];
 }
 

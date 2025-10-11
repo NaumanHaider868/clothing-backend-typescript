@@ -11,20 +11,26 @@ const transformProduct = (data: createProduct, isUpdate?: boolean) => {
     gender: data.gender as Gender,
     collectionType: data.collectionType as CollectionType,
     onSale: data.onSale,
-    discountPercentage: data.discountPercentage,
+    discountPercent: data.discountPercent,
     inStock: data.inStock,
     type: data.type,
+
     variants: {
       ...(isUpdate ? { deleteMany: {} } : {}),
       create: data.variants.map((v) => ({
         color: v.color,
-        size: v.size,
-        stockCount: v.stockCount,
+        images: {
+          create: (v.images || []).map((img: string | { imageUrl: string }) => ({
+            imageUrl: typeof img === 'string' ? img : img.imageUrl,
+          })),
+        },
+        sizes: {
+          create: (v.sizes || []).map((s: { size: string; stockCount: number }) => ({
+            size: s.size,
+            stockCount: s.stockCount,
+          })),
+        },
       })),
-    },
-    images: {
-      ...(isUpdate ? { deleteMany: {} } : {}),
-      create: data.images.map((img) => ({ imageUrl: img.url, color: img.color })),
     },
   };
 };
