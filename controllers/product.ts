@@ -1,7 +1,7 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { prisma } from '../config';
 import { transformProduct } from '../transforms';
-import type { createProduct as CreateProductBody, FetchProducts } from '../types';
+import { createProduct as CreateProductBody } from '../types';
 import {
   appErrorResponse,
   RequestWithBody,
@@ -32,16 +32,16 @@ const createProduct = async (req: RequestWithBody<CreateProductBody>, res: Respo
   }
 };
 
-const fetchProducts = async (req: RequestWithBody<FetchProducts>, res: Response) => {
+const fetchProducts = async (req: Request, res: Response) => {
   try {
-    const { search, type, size } = req.body;
+    // const { search, type, size } = req.body;
 
     const products = await prisma.product.findMany({
       where: {
-        ...(search && {
-          name: { contains: search },
-        }),
-        ...(type && { type }),
+        // ...(search && {
+        //   name: { contains: search },
+        // }),
+        // ...(type && { type }),
         // ...(color && {
         //   variants: {
         //     some: {
@@ -49,17 +49,17 @@ const fetchProducts = async (req: RequestWithBody<FetchProducts>, res: Response)
         //     },
         //   },
         // }),
-        ...(size && {
-          variants: {
-            some: {
-              sizes: {
-                some: {
-                  size,
-                },
-              },
-            },
-          },
-        }),
+        // ...(size && {
+        //   variants: {
+        //     some: {
+        //       sizes: {
+        //         some: {
+        //           size,
+        //         },
+        //       },
+        //     },
+        //   },
+        // }),
       },
       include: {
         variants: {
