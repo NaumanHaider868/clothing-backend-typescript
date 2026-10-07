@@ -1,0 +1,13 @@
+model DeletionRecord {
+    id          Int      @id @default(autoincrement())
+    entityType  String
+    entityId    Int
+    summary     String
+    snapshot    Json
+    deletedById Int
+    createdAt   DateTime @default(now())
+
+    deletedBy Users @relation(fields: [deletedById], references: [id])
+
+    @@index([entityType, createdAt])
+}
