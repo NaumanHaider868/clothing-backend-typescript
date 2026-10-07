@@ -14,10 +14,12 @@ import { TokenIdentifier } from '../enums';
 import { mailConnector } from '../utils/mailConnector';
 import { Users as UserSchema } from '@prisma/client';
 import { LoginPayload } from '../types';
+import { toPublicUser } from '../utils/user';
+import { getAuth } from '../middlewares';
 
 const register = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, email, password, phone, address } = req.body;
     const existingUser = await prisma.users.findUnique({
       where: {
         email,
@@ -31,19 +33,26 @@ const register = async (req: Request, res: Response) => {
       return sendErrorResponse(res, 409, 'User already exists', token);
     }
 
+    const mailConfigured = Boolean(process.env.MAILTRAP_HOST);
     const user = await prisma.users.create({
       data: {
         firstName,
         lastName,
         email,
         password: await hashPassword(password),
-        isVerified: false,
+        phone: phone || null,
+        address: address || null,
+        isVerified: !mailConfigured,
       },
     });
+    if (!mailConfigured) {
+      return sendSuccessResponse(res, 200, null, 'Account created. You can log in now.');
+    }
+
     const [emailVerificationToken, verificationCheckToken] = [
       getJWTToken(
         { userId: user.userId },
-        { expiresIn: '1min', reference: TokenIdentifier.EmailVerification }
+        { expiresIn: '10min', reference: TokenIdentifier.EmailVerification }
       ),
       getJWTToken(
         { userId: user.userId },
@@ -90,17 +99,10 @@ const login = async (req: RequestWithBody<LoginPayload>, res: Response) => {
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) return sendErrorResponse(res, 400, 'Invalid Credentials');
     if (!user.isVerified) {
-      const [emailVerificationToken, verificationCheckToken] = [
-        getJWTToken(
-          { userId: user.userId },
-          { expiresIn: '10min', reference: TokenIdentifier.EmailVerification }
-        ),
-        getJWTToken(
-          { userId: user.userId },
-          { expiresIn: '10min', reference: TokenIdentifier.VerificationCheck }
-        ),
-      ];
-
+      const emailVerificationToken = getJWTToken(
+        { userId: user.userId },
+        { expiresIn: '10min', reference: TokenIdentifier.EmailVerification }
+      );
       const verificationUrl = `${process.env.FRONTEND_BASE_URL}/verify-email?token=${emailVerificationToken}`;
 
       await mailConnector.sendMail({
@@ -117,18 +119,23 @@ const login = async (req: RequestWithBody<LoginPayload>, res: Response) => {
   `,
       });
 
-      return sendSuccessResponse(
+      return sendErrorResponse(
         res,
-        200,
-        {
-          token: verificationCheckToken,
-          isVerified: false,
-        },
-        'User not verified. Please verify first'
+        403,
+        'Email is not verified. A new verification email was sent.'
       );
     }
 
-    return sendSuccessResponse(res, 200, user, 'Login Successfully');
+    const token = getJWTToken(
+      { userId: user.userId },
+      { expiresIn: '7d', reference: TokenIdentifier.Auth }
+    );
+    return sendSuccessResponse(
+      res,
+      200,
+      { token, user: toPublicUser(user) },
+      'Login Successfully'
+    );
   } catch (error) {
     return appErrorResponse(res, error);
   }
@@ -187,10 +194,14 @@ const verificationCheck = async (req: Request, res: Response) => {
     if (!user.isVerified) return sendErrorResponse(res, 400, 'User not verified');
     const authToken = getJWTToken(
       { userId },
-      { expiresIn: '10min', reference: TokenIdentifier.Login }
+      { expiresIn: '7d', reference: TokenIdentifier.Auth }
     );
-    delete user.password;
-    sendSuccessResponse(res, 200, { user, token: authToken }, 'Verification complete.');
+    sendSuccessResponse(
+      res,
+      200,
+      { user: toPublicUser(user), token: authToken },
+      'Verification complete.'
+    );
   } catch (error) {
     return appErrorResponse(res, error);
   }
@@ -292,22 +303,28 @@ const resetPassword = async (req: Request, res: Response) => {
       where: { userId },
     });
     if (!user) return sendErrorResponse(res, 404, 'Invalid verification token');
-    const isValidCode = await comparePassword(password, user.password);
-    if (!isValidCode) return sendErrorResponse(res, 400, 'Invalid Credentials');
+    const samePassword = await comparePassword(password, user.password);
+    if (samePassword) return sendErrorResponse(res, 400, 'Choose a password you have not used before');
+    const hashed = await hashPassword(password);
+    if (!hashed) return sendErrorResponse(res, 400, 'Password is required');
     await prisma.users.update({
       where: { userId: user.userId },
-      data: {
-        password: await hashPassword(password),
-      },
+      data: { password: hashed },
     });
-    delete user.password;
-    delete user.verificationCode;
-    delete user.userId;
-    delete user.createdAt;
-    delete user.updatedAt;
-    sendSuccessResponse(res, 200, user, 'Password reset successfully');
+    sendSuccessResponse(res, 200, toPublicUser(user), 'Password reset successfully');
   } catch (error) {
     return appErrorResponse(res, error);
+  }
+};
+
+const me = async (req: Request, res: Response) => {
+  try {
+    const auth = getAuth(req);
+    const user = await prisma.users.findUnique({ where: { id: auth.id } });
+    if (!user) return sendErrorResponse(res, 401, 'Invalid session. Please log in again.');
+    return sendSuccessResponse(res, 200, toPublicUser(user), 'Profile loaded');
+  } catch (error) {
+    return appErrorResponse(res, error as Error);
   }
 };
 
@@ -319,4 +336,5 @@ export {
   resendVerificationEmail,
   forgetPasswordEmail,
   resetPassword,
+  me,
 };
