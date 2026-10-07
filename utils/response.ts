@@ -20,6 +20,7 @@ const sendErrorResponse = <T>(
   return res.status(code).send({
     status: 'error',
     error: errorMessage,
+    message: errorMessage,
     ...(details ? { details } : {}),
     data,
   });

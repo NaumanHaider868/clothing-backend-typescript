@@ -1,36 +1,40 @@
-import { CollectionType, Gender } from '../../enums';
+import { CollectionType, Gender } from '@prisma/client';
 
-interface ProductVariantSize {
+interface ProductSizeInput {
   size: string;
   stockCount: number;
 }
+
 interface ProductVariantInput {
   color: string;
   images: string[];
-  sizes: ProductVariantSize[];
+  sizes: ProductSizeInput[];
 }
-interface createProduct {
+
+interface ProductInput {
   name: string;
-  description: string;
+  description: string | null;
   price: number;
-  collection?: string;
-  modelDetail?: string;
+  collection: string | null;
+  modelDetail: string | null;
   isPublic: boolean;
   gender: Gender;
   collectionType: CollectionType;
   onSale: boolean;
-  discountPercent?: number;
+  discountPercent: number;
   inStock: boolean;
-  stock: number;
-  category: string;
-  type: string;
+  type: string | null;
   variants: ProductVariantInput[];
 }
 
-interface FetchProducts {
+interface ProductListQuery {
   search?: string;
-  size?: string;
+  gender?: string;
+  collectionType?: string;
   type?: string;
+  size?: string;
+  color?: string;
+  onSale?: string;
 }
 
-export { createProduct, Gender, CollectionType, ProductVariantInput, FetchProducts };
+export type { ProductInput, ProductVariantInput, ProductSizeInput, ProductListQuery };
