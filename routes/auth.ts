@@ -2,17 +2,27 @@ import { Router } from 'express';
 import {
   forgetPasswordEmail,
   login,
+  me,
   register,
   resendVerificationEmail,
   resetPassword,
+  saveProfile,
   verificationCheck,
   verifyEmail,
 } from '../controllers';
-import { authValidator } from '../validators';
+import { authValidator, UserSchema, userValidator } from '../validators';
 import { AuthSchema } from '../enums';
+import { authenticate } from '../middlewares';
 
 const router = Router();
 router.post('/login', authValidator.getMiddleware(AuthSchema.Login), login);
+router.get('/me', authenticate, me);
+router.patch(
+  '/profile',
+  authenticate,
+  userValidator.getMiddleware(UserSchema.UpdateProfile),
+  saveProfile
+);
 router.post('/register', authValidator.getMiddleware(AuthSchema.Register), register);
 router.post('/verify-email', authValidator.getMiddleware(AuthSchema.Verify_Email), verifyEmail);
 router.post(

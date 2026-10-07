@@ -1,15 +1,25 @@
 model Users {
-    id               Int      @id @default(autoincrement())
-    email            String   @unique
+    id               Int              @id @default(autoincrement())
+    email            String           @unique
     firstName        String?
     lastName         String?
-    role             String   @default("USER")
-    userId           String   @unique @default(uuid())
+    role             Role             @default(USER)
+    userId           String           @unique @default(uuid())
     password         String
-    isVerified       Boolean  @default(false)
+    isVerified       Boolean          @default(false)
     verificationCode String?
     address          String?
     phone            String?
-    createdAt        DateTime @default(now())
-    updatedAt        DateTime @updatedAt
+    createdAt        DateTime         @default(now())
+    updatedAt        DateTime         @updatedAt
+    cartItems        CartItem[]
+    orders           Order[]
+    deletions        DeletionRecord[]
+}
+
+enum Role {
+    ADMIN
+    MANAGER
+    EDITOR
+    USER
 }
