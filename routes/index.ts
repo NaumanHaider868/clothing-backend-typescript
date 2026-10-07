@@ -2,10 +2,20 @@ import { Express, Request, Response } from 'express';
 import { appErrorResponse, sendErrorResponse } from '../utils';
 import auth from './auth';
 import product from './product';
+import user from './user';
+import order from './order';
+import cart from './cart';
+import dashboard from './dashboard';
+import audit from './audit';
 
 const routes = Object.freeze({
   auth: [auth],
   product: [product],
+  user: [user],
+  order: [order],
+  cart: [cart],
+  dashboard: [dashboard],
+  audit: [audit],
 });
 
 /**
