@@ -1,5 +1,6 @@
 import { CollectionType, Gender, Prisma, Role } from '@prisma/client';
 import { prisma } from '../config';
+import { enqueueImageUrl } from './imageQueue';
 import { isStaff } from '../enums/role';
 import { ProductInput, ProductListQuery } from '../types';
 import { HttpError } from '../utils/httpError';
@@ -163,12 +164,23 @@ const createProductRecord = (input: ProductInput) =>
     include: productInclude,
   });
 
-const updateProductRecord = (id: number, input: ProductInput) =>
-  prisma.product.update({
+const imageUrlsOf = (product: {
+  variants: { images: { imageUrl: string }[] }[];
+}) => product.variants.flatMap((variant) => variant.images.map((image) => image.imageUrl));
+
+const updateProductRecord = async (id: number, input: ProductInput) => {
+  const current = await prisma.product.findUnique({
+    where: { id },
+    include: productInclude,
+  });
+  const updated = await prisma.product.update({
     where: { id },
     data: toProductData(input, true),
     include: productInclude,
   });
+  if (current) imageUrlsOf(current).forEach(enqueueImageUrl);
+  return updated;
+};
 
 const listProducts = async (query: ProductListQuery, role?: Role) => {
   const gender = textOrNull(query.gender);
@@ -247,6 +259,7 @@ const deleteProductRecord = async (id: number, actorId: number) => {
     }),
     prisma.product.delete({ where: { id } }),
   ]);
+  imageUrlsOf(product).forEach(enqueueImageUrl);
 };
 
 export {
