@@ -1,21 +1,9 @@
-import fs from 'fs';
-import path from 'path';
-import { randomUUID } from 'crypto';
 import { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
 import { sendErrorResponse } from '../utils';
 
-const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-fs.mkdirSync(uploadDir, { recursive: true });
-
 const imageUpload = multer({
-  storage: multer.diskStorage({
-    destination: uploadDir,
-    filename: (_req, file, cb) => {
-      const ext = path.extname(file.originalname).toLowerCase();
-      cb(null, `${randomUUID()}${ext}`);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024, files: 12 },
   fileFilter: (_req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
@@ -53,4 +41,4 @@ const acceptUpload =
 const uploadImages = acceptUpload(imageUpload.array('images', 12));
 const uploadXml = acceptUpload(xmlUpload.single('file'));
 
-export { uploadImages, uploadXml, uploadDir };
+export { uploadImages, uploadXml };

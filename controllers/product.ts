@@ -12,6 +12,7 @@ import {
 } from '../services';
 import { ProductListQuery } from '../types';
 import { asyncHandler, HttpError, sendSuccessResponse, toSafeNumber } from '../utils';
+import { uploadStoredImage } from '../utils/r2';
 
 const createProduct = asyncHandler(async (req: Request, res: Response) => {
   const product = await createProductRecord(parseProductInput(req.body));
@@ -46,8 +47,10 @@ const uploadProductImages = asyncHandler(async (req: Request, res: Response) => 
   if (!Array.isArray(files) || files.length === 0) {
     throw new HttpError(400, 'Choose at least one image');
   }
-  const base = `${req.protocol}://${req.get('host')}`;
-  const urls = files.map((file) => `${base}/uploads/${file.filename}`);
+  const urls = [];
+  for (const file of files) {
+    urls.push(await uploadStoredImage(file));
+  }
   sendSuccessResponse(res, 200, { urls }, 'Images uploaded');
 });
 

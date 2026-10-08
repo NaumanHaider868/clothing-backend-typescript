@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import { config } from 'dotenv';
 import appRouter from './routes';
+import { startImageCleanup } from './services/imageQueue';
 import { formatError } from './utils';
 import path from 'path';
 import process from 'process';
@@ -36,6 +37,7 @@ appRouter(app);
 const port = process.env.PORT ?? 8000;
 const server = app.listen(port, () => {
   console.log('🚀 App running on port', port);
+  startImageCleanup();
 });
 
 const shutdown = () => {
